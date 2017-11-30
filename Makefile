@@ -1,7 +1,7 @@
 assembly_source_file = src/bootsector.asm
 bootloader = build/bootloader.bin
 
-PHONY: all run clean
+PHONY: clean all run
 
 all: $(bootloader)
 
@@ -13,4 +13,4 @@ $(bootloader): $(assembly_source_file)
 	@nasm -f bin -o $@ $<
 
 clean:
-	@rm -r build
+	-@rm -r build
