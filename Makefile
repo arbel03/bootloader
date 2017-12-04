@@ -1,27 +1,27 @@
-assembly_source_file ?= src/bootsector.asm
 bootloader ?= build/bootloader.bin
-filesystem ?= build/filesystem.bin # A file
-os ?= build/iso/os.iso
-# isofiles folder is defined by user
+filesystem ?= build/filesystem.bin
+os ?= build/os.bin
 
 PHONY: clean all run
 
 all: $(bootloader)
 
 run: $(os) $(bootloader) $(filesystem)
-	@qemu-system-i386 -drive file=$(bootloader),format=raw
+	@qemu-system-i386 -drive file=$(os),format=raw
 
-$(bootloader): $(assembly_source_file)
+$(bootloader): 
 	@mkdir -p build
-	@nasm -f bin -o $@ $<
+	@nasm -f bin -o $@ src/bootloader.asm
 
 $(filesystem):
-	# TODO: 
-	# mkfs.fat
-	# cat bootloader filesystem > os
+	@mkfs.msdos -C $@ 20000
+	@sudo mkdir -p /mnt
+	@sudo mount -o loop $@ /mnt
+	@sudo mkdir /mnt/boot
+	@sudo umount /mnt
 
 $(os): $(bootloader) $(filesystem)
-	cat $(bootloader) $(filesystem) > $@
+	@cat $(bootloader) $(filesystem) > $@
 
 clean:
 	-@rm -r build
