@@ -1,3 +1,23 @@
+section .bootsector
+
+bits 16
+start:    
+    ; Set stack, will be located at (0:0x7c00+0x7c00)
+    mov sp, 0x7c00
+    
+    ; Storing disk number
+    mov [disk_number], dl
+
+    mov bx, disk_number_message
+    call print_string
+
+    mov ax, dx
+    xor ah, ah
+    call print_register
+
+    jmp $
+
+
 ; al- ascii code
 ; This function prints a character represented by ascii
 print_char:
@@ -63,3 +83,10 @@ shift_done:
     pop ax
     loop print_hex_loop
 ret
+
+hex db '0123456789abcdef'
+disk_number_message db 'Disk number: ',0
+disk_number db 0
+
+times 510-($-$$) db 0
+dw 0xaa55

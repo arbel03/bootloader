@@ -1,3 +1,5 @@
+stage1_source_files ?= $(wildcard src/stage1/*.asm)
+stage1_object_files ?= $(patsubst src/stage1/%.asm, build/stage1/%.o, $(stage1_source_files))
 bootloader ?= build/bootloader.bin
 filesystem ?= build/filesystem.bin
 os ?= build/os.bin
@@ -6,22 +8,15 @@ PHONY: clean all run
 
 all: $(bootloader)
 
-run: $(os) $(bootloader) $(filesystem)
-	@qemu-system-i386 -drive file=$(os),format=raw
+$(bootloader): $(stage1_object_files)
+	@ld -n -m elf_i386 --oformat binary -T linker.ld -o $@ $(stage1_object_files)
 
-$(bootloader): 
-	@mkdir -p build
-	@nasm -f bin -o $@ src/bootloader.asm
+run: $(bootloader) 
+	@qemu-system-i386 -drive file=$(bootloader),format=raw
 
-$(filesystem):
-	@mkfs.msdos -C $@ 20000
-	@sudo mkdir -p /mnt
-	@sudo mount -o loop $@ /mnt
-	@sudo mkdir /mnt/boot
-	@sudo umount /mnt
-
-$(os): $(bootloader) $(filesystem)
-	@cat $(bootloader) $(filesystem) > $@
+build/stage1/%.o: src/stage1/%.asm
+	@mkdir -p build/stage1
+	@nasm -f elf32 -o $@ $<
 
 clean:
 	-@rm -r build
