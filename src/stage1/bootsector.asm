@@ -1,91 +1,63 @@
-section .bootsector
-
 bits 16
+
 start:    
-    ; Set stack, will be located at (0:0x7c00+0x7c00)
+    ; Setting code segment
+    jmp 0x07c0:.init_cs
+.init_cs:
+    mov ax, cs
+    mov ds, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; Set a temporary stack, will be located at (0:0x7c00)
+    xor ax, ax
+    mov ss, ax
     mov sp, 0x7c00
-    
+
     ; Storing disk number
     mov [disk_number], dl
 
-    mov bx, disk_number_message
-    call print_string
-
-    mov ax, dx
-    xor ah, ah
-    call print_register
+    call load
+    jmp stage2
 
     jmp $
 
+disk_error:
+    mov bx, disk_error_message
+    call print_string
+    shr ax, 8
+    call print_register
+    call print_line
+    jmp $
 
-; al- ascii code
-; This function prints a character represented by ascii
-print_char:
-    push ax
-    mov ah, 0eh
-    int 10h
-    pop ax
-    ret
+load:
+    ; Calculating sectors to load
+    mov dx, 0
+    mov ax, stage2_end - stage2
+    mov bx, 512 ; Divide by 512, sector size
+    div bx ; AX (Quotient), DX (Remainder)
 
-; bx- pointer to string terminated by null byte
-; This function prints a string
-print_string:
-    push bx
-    push ax
-.string_loop:
-    mov al, byte [bx]
-    or al, al
-    jz end
-    call print_char
-    inc bx
-    jmp .string_loop
-end:
-    pop ax
-    pop bx
-    ret
+    mov dh, al ; Moving sectors to read to dh
+    mov dl, [disk_number] ; Moving disk number to dl
+    mov bx, stage2
+    mov ax, cs
+    mov es, ax
+    call disk_load
+    jc disk_error
 
-; al- decimal integer
-; This function prints the input as a hex digit
-print_hex_digit:
-    push ax
-    push bx
-
+    mov bx, disk_load_message
+    call print_string
     xor ah, ah
-    mov bx, hex
-    add bx, ax
-    mov al, byte [bx]
-    call print_char
-
-    pop bx
-    pop ax
+    call print_register ; Printing amount of sectors loaded to memory, stored in al
+    call print_line
     ret
 
-print_register:
-    mov bx, 0xF000
-    mov cx, 4
-print_hex_loop:
-    push ax
-
-    and ax, bx
-
-    push cx
-    dec cx
-    ; If cx is 0, we will enter an endless loop
-    jz shift_done
-    shift_ax_right:
-        shr ax, 4
-        loop shift_ax_right
-shift_done:
-    pop cx
-    call print_hex_digit
-
-    shr bx, 4
-    pop ax
-    loop print_hex_loop
-ret
+%include "src/stage1/print.asm"
+%include "src/stage1/disk_load.asm"
 
 hex db '0123456789abcdef'
-disk_number_message db 'Disk number: ',0
+disk_error_message db 'Disk error! error code: ', 0
+disk_load_message db 'Loaded sectors: ', 0
 disk_number db 0
 
 times 510-($-$$) db 0
