@@ -5,5 +5,4 @@ stage2_start:
     call print_string
     jmp $
 
-my_string: times 500 db 'x' 
-db 0
+my_string: db 'Landed in stage2.', 0
