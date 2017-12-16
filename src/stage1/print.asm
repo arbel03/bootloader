@@ -1,3 +1,5 @@
+bits 16
+
 ; al- ascii code
 ; This function prints a character represented by ascii
 print_char:
