@@ -15,4 +15,10 @@ load_kernel:
     rep movsb
     
     mov eax, [kernel_start+0x18] ; Entry point
+    
+    mov esi, [kernel_start+0x1C]
+    add esi, kernel_start
+    
+    mov ebx, [esi+0x08] ; p_vaddr
+    mov ecx, [esi+0x14] ; p_memsz- size of segment in memory
     ret

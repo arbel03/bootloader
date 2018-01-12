@@ -28,6 +28,10 @@ load_kernel_to_memory:
 bits 32
 protected_mode_start:
     call load_kernel
+    
+    mov [info.kernel_start_address], ebx
+    add ebx, ecx
+    mov [info.kernel_end_address], ebx
 
     mov ebx, info
     call eax
@@ -40,6 +44,8 @@ protected_mode_start:
 info:
     .mmap_count: dd 0
     .mmap_addr: dd 0
+    .kernel_start_address: dd 0
+    .kernel_end_address: dd 0
 
 a20_disabled_message: db 'A20 line is disabled.', 0
 a20_enabled_message: db 'A20 line enabled.', 0
