@@ -22,7 +22,7 @@ startup:
 
     call protected_mode
 
-    hlt
+    jmp $
 
 ; Load part of disk to high memory
 load_kernel_to_memory:
