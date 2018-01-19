@@ -11,10 +11,4 @@ stage2_end:
 kernel_start:
     incbin "../build/kernel.bin"
     align 512, db 0
-<<<<<<< HEAD
 kernel_end:
-
-incbin "../build/filesystem.bin", 512 ; include the whole filesystem file containing the kernel and skip the first 512 bytes, the mbr...
-=======
-kernel_end:
->>>>>>> fat-bpb
